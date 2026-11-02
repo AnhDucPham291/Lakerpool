@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+  COMPLETED
+}
+
+enum ReportSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  EMERGENCY
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  studentVerified Boolean @default(false)
+  createdAt     DateTime @default(now())
+  driverRides   Ride[]   @relation("DriverRides")
+  bookings      Booking[]
+  reviewsGiven  Review[] @relation("ReviewsGiven")
+  reviewsReceived Review[] @relation("ReviewsReceived")
+  reports       SafetyReport[]
+  messages      Message[]
+}
+
+model Ride {
+  id              String   @id @default(cuid())
+  driverId        String
+  driver          User     @relation("DriverRides", fields: [driverId], references: [id])
+  origin          String
+  destination     String
+  departureAt     DateTime
+  pickupDetails   String
+  dropoffDetails  String
+  vehicleType     String
+  vehicleName     String?
+  vehicleColor    String?
+  seatsTotal      Int
+  seatsAvailable  Int
+  estimatedPrice  Float
+  stops           Int      @default(0)
+  notes           String?
+  createdAt       DateTime @default(now())
+  bookings        Booking[]
+  @@index([origin, destination, departureAt])
+}
+
+model Booking {
+  id          String @id @default(cuid())
+  rideId      String
+  ride        Ride   @relation(fields: [rideId], references: [id])
+  passengerId String
+  passenger   User   @relation(fields: [passengerId], references: [id])
+  seats       Int    @default(1)
+  pricePerPassenger Float
+  status      BookingStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  @@unique([rideId, passengerId])
+}
+
+model Review {
+  id         String @id @default(cuid())
+  reviewerId String
+  reviewer   User   @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  driverId   String
+  driver     User   @relation("ReviewsReceived", fields: [driverId], references: [id])
+  rideId     String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  @@index([driverId])
+}
+
+model SafetyReport {
+  id          String @id @default(cuid())
+  reporterId  String
+  reporter    User   @relation(fields: [reporterId], references: [id])
+  rideId      String
+  category    String
+  description String
+  severity    ReportSeverity
+  status      String @default("OPEN")
+  createdAt   DateTime @default(now())
+}
+
+model Message {
+  id        String @id @default(cuid())
+  senderId  String
+  sender    User   @relation(fields: [senderId], references: [id])
+  rideId    String
+  body      String
+  createdAt DateTime @default(now())
+}
