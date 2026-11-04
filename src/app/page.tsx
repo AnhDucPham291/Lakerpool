@@ -1,4 +1,6 @@
 import TripPlanner from "@/components/TripPlanner";
+import SiteQrCode from "@/components/SiteQrCode";
+import RideMarketplace from "@/components/RideMarketplace";
 import { ArrowUpRight, ShieldCheck, Route, Wallet, Users, MapPin, Clock3, Sparkles } from "lucide-react";
 
 const features = [
@@ -12,7 +14,7 @@ export default function Home() {
     <nav className="nav">
       <a className="brand" href="#"><span className="brand-mark">LP</span><span>LAKER<span className="brand-light">POOL</span></span></a>
       <div className="nav-links"><a href="#how">HOW IT WORKS</a><a href="#features">WHY LAKERPOOL</a><a href="#rides">FIND A RIDE</a></div>
-      <a className="nav-cta" href="#rides">Explore rides <ArrowUpRight size={16}/></a>
+      <div className="nav-actions"><SiteQrCode /><a className="nav-cta" href="#rides">Explore rides <ArrowUpRight size={16}/></a></div>
     </nav>
 
     <section className="hero">
@@ -44,7 +46,7 @@ export default function Home() {
       <div className="feature-grid">{features.map(({icon: Icon,title,text},i)=><article className="feature-card" key={title}><span className="feature-number">0{i+1}</span><div className="feature-icon"><Icon size={22}/></div><h3>{title}</h3><p>{text}</p></article>)}</div>
     </section>
     <section className="how-section" id="how"><div className="eyebrow">THREE SIMPLE STEPS</div><h2>Your next trip starts <em>here.</em></h2><div className="steps"><div><b>01</b><h3>Search</h3><p>Enter where you're going and when you want to leave.</p></div><div><b>02</b><h3>Compare</h3><p>Review routes, pickup points, driver details, and estimated prices.</p></div><div><b>03</b><h3>Connect</h3><p>Request a seat, wait for the driver to accept, and follow your trip.</p></div></div></section>
-    <section className="rides-section" id="rides"><div className="rides-intro"><div className="eyebrow dark">POWERED BY GOOGLE MAPS PLATFORM</div><h2>Plan your route.<br/><em>Find your people.</em></h2><p>Enter your pickup and destination to see driving distance, estimated travel time, and route alternatives. This is the mapping foundation for LakerPool ride matching.</p></div><TripPlanner /></section>
+    <section className="rides-section" id="rides"><div className="rides-intro"><div className="eyebrow dark">OPEN MAP DATA · OPENROUTESERVICE</div><h2>Plan your route.<br/><em>Find your people.</em></h2><p>Enter your pickup and destination to see driving distance, estimated travel time, and route alternatives. This is the mapping foundation for LakerPool ride matching.</p></div><TripPlanner /><RideMarketplace /></section>
     <footer><a className="brand" href="#"><span className="brand-mark">LP</span><span>LAKER<span className="brand-light">POOL</span></span></a><span>Shared journeys. Stronger community.</span><span>© 2026 LakerPool</span></footer>
   </main>;
 }

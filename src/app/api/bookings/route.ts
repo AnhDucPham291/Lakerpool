@@ -3,6 +3,21 @@ import { z } from "zod";
 import { db } from "@/lib/prisma";
 import { badRequest, getDemoUserId } from "@/lib/http";
 const schema = z.object({ rideId:z.string(), seats:z.number().int().min(1).max(4).default(1) });
+export async function GET(req: Request) {
+  const userId = getDemoUserId(req);
+  if (!userId) return badRequest("Sign in first.", 401);
+  const { searchParams } = new URL(req.url);
+  if (searchParams.get("as") !== "driver") return badRequest("Unsupported booking view.");
+  const bookings = await db.booking.findMany({
+    where: { status: "PENDING", ride: { driverId: userId } },
+    include: {
+      passenger: { select: { name: true, studentVerified: true } },
+      ride: { include: { driver: { select: { id: true, name: true, studentVerified: true } } } }
+    },
+    orderBy: { createdAt: "asc" }
+  });
+  return NextResponse.json({ bookings });
+}
 export async function POST(req: Request) {
   const passengerId = getDemoUserId(req);
   if (!passengerId) return badRequest("Missing x-user-id header. Sign in first.", 401);

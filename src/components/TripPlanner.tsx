@@ -1,11 +1,31 @@
- "use client";
+"use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Loader } from "@googlemaps/js-api-loader";
-import { ArrowUpRight, MapPin, Navigation, Clock3, Route as RouteIcon } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+import { ArrowUpRight, MapPin, Navigation, Clock3, Route as RouteIcon, Sparkles, CarFront, Star, Users } from "lucide-react";
 
 type Suggestion = { placeId: string; text: string };
-type RouteOption = { id: number; distanceMiles: number; durationMinutes: number; encodedPolyline: string };
+export type RouteOption = {
+  id: number;
+  distanceMiles: number;
+  durationMinutes: number;
+  coordinates: [number, number][];
+};
+export type DriverCandidate = {
+  name: string;
+  vehicle: string;
+  color: string;
+  coordinates: [number, number];
+  rating: number;
+  ratingCount: number;
+  baseFare: number;
+  ratePerMile: number;
+  pickupDistanceMiles: number;
+  etaMinutes: number;
+  simulated: true;
+};
+
+const RouteMap = dynamic(() => import("./RouteMap"), { ssr: false });
 
 export default function TripPlanner() {
   const [origin, setOrigin] = useState("");
@@ -17,10 +37,11 @@ export default function TripPlanner() {
   const [selectedRoute, setSelectedRoute] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<google.maps.Map | null>(null);
-  const routeLine = useRef<google.maps.Polyline | null>(null);
-  const markers = useRef<google.maps.Marker[]>([]);
+  const [driverMatches, setDriverMatches] = useState<DriverCandidate[]>([]);
+  const [matchingDriver, setMatchingDriver] = useState(false);
+  const [driverSearchError, setDriverSearchError] = useState("");
+  const [shareRide, setShareRide] = useState(true);
+  const [riderCount, setRiderCount] = useState(2);
 
   async function getSuggestions(value: string, field: "origin" | "destination") {
     if (value.trim().length < 3) {
@@ -33,7 +54,7 @@ export default function TripPlanner() {
       const list = data.suggestions ?? [];
       field === "origin" ? setOriginSuggestions(list) : setDestinationSuggestions(list);
     } catch {
-      // Autocomplete is optional; users can still type a complete address.
+      // Suggestions are optional; users can still enter a complete address.
     }
   }
 
@@ -41,65 +62,16 @@ export default function TripPlanner() {
     const timer = setTimeout(() => {
       if (activeField === "origin") void getSuggestions(origin, "origin");
       if (activeField === "destination") void getSuggestions(destination, "destination");
-    }, 300);
+    }, 350);
     return () => clearTimeout(timer);
   }, [origin, destination, activeField]);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function initMap() {
-      const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-      if (!key || !mapRef.current) return;
-      try {
-        const loader = new Loader({ apiKey: key, version: "weekly" });
-        const { Map } = await loader.importLibrary("maps") as google.maps.MapsLibrary;
-        if (cancelled || !mapRef.current) return;
-        mapInstance.current = new Map(mapRef.current, {
-          center: { lat: 42.9634, lng: -85.6681 },
-          zoom: 9,
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: true,
-          clickableIcons: false,
-          styles: [
-            { elementType: "geometry", stylers: [{ color: "#17212c" }] },
-            { elementType: "labels.text.fill", stylers: [{ color: "#aeb9c7" }] },
-            { elementType: "labels.text.stroke", stylers: [{ color: "#17212c" }] },
-            { featureType: "road", elementType: "geometry", stylers: [{ color: "#344354" }] },
-            { featureType: "water", elementType: "geometry", stylers: [{ color: "#0c131c" }] },
-            { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#8fa46a" }] }
-          ]
-        });
-      } catch {
-        setError("The Google map could not load. Check your browser API key and Maps JavaScript API activation.");
-      }
-    }
-    void initMap();
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
-    async function draw() {
-      if (!mapInstance.current || !routes[selectedRoute]?.encodedPolyline) return;
-      const { encoding } = await google.maps.importLibrary("geometry") as google.maps.GeometryLibrary;
-      const path = encoding.decodePath(routes[selectedRoute].encodedPolyline);
-      routeLine.current?.setMap(null);
-      markers.current.forEach(m => m.setMap(null));
-      routeLine.current = new google.maps.Polyline({
-        path, map: mapInstance.current, geodesic: true,
-        strokeColor: "#c9f36a", strokeOpacity: 0.95, strokeWeight: 5
-      });
-      const bounds = new google.maps.LatLngBounds();
-      path.forEach(point => bounds.extend(point));
-      mapInstance.current.fitBounds(bounds, 55);
-    }
-    void draw().catch(() => setError("The route was calculated, but its map line could not be displayed."));
-  }, [routes, selectedRoute]);
 
   async function calculateRoute(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setRoutes([]);
+    setDriverMatches([]);
+    setDriverSearchError("");
     if (!origin.trim() || !destination.trim()) {
       setError("Please enter both a starting point and a destination.");
       return;
@@ -115,6 +87,21 @@ export default function TripPlanner() {
       if (!data.routes?.length) throw new Error("No driving route was found for those locations.");
       setRoutes(data.routes);
       setSelectedRoute(0);
+      setMatchingDriver(true);
+      try {
+        const matchResponse = await fetch("/api/drivers/dispatch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pickup: data.routes[0].coordinates[0] })
+        });
+        const matchData = await matchResponse.json();
+        if (!matchResponse.ok) throw new Error(matchData.error ?? "Driver suggestions are unavailable.");
+        setDriverMatches(Array.isArray(matchData.drivers) ? matchData.drivers : []);
+      } catch {
+        setDriverSearchError("Nearby driver suggestions could not be loaded.");
+      } finally {
+        setMatchingDriver(false);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -129,6 +116,9 @@ export default function TripPlanner() {
   }
 
   const suggestions = activeField === "origin" ? originSuggestions : destinationSuggestions;
+  const soloFare = (driver: DriverCandidate) => driver.baseFare + driver.ratePerMile * (routes[selectedRoute]?.distanceMiles ?? 0);
+  const estimateFare = (driver: DriverCandidate) => (shareRide ? soloFare(driver) / riderCount : soloFare(driver)).toFixed(2);
+  const savingsPercent = Math.round((1 - 1 / riderCount) * 100);
   return <div className="planner-wrap">
     <form className="planner-form" onSubmit={calculateRoute}>
       <label className="planner-field"><span><MapPin size={15}/> STARTING POINT</span>
@@ -140,17 +130,54 @@ export default function TripPlanner() {
       </label>
       {activeField && suggestions.length > 0 && <div className="suggestions">{suggestions.map(s => <button type="button" key={s.placeId} onMouseDown={e => e.preventDefault()} onClick={() => choose(activeField, s)}><MapPin size={14}/>{s.text}</button>)}</div>}
       <button className="button button-primary planner-submit" disabled={loading}>{loading ? "Finding route..." : "Calculate route"} <ArrowUpRight size={17}/></button>
+      {routes[selectedRoute] && <div className="route-distance-summary" aria-live="polite">
+        <span><RouteIcon size={16}/> ROUTE DISTANCE</span>
+        <strong>{routes[selectedRoute].distanceMiles} miles</strong>
+        <small>About {routes[selectedRoute].durationMinutes} minutes by car</small>
+      </div>}
+      {routes[selectedRoute] && <section className="ride-share-controls" aria-label="Ride pricing options">
+        <div className="ride-share-heading"><span>CHOOSE HOW TO RIDE</span><small>Shared rides cost less per person</small></div>
+        <div className="ride-mode-options">
+          <button type="button" className={shareRide ? "active" : ""} aria-pressed={shareRide} onClick={() => setShareRide(true)}>
+            <Users size={16}/><span><b>Share ride</b><small>Split the trip price</small></span>
+          </button>
+          <button type="button" className={!shareRide ? "active" : ""} aria-pressed={!shareRide} onClick={() => setShareRide(false)}>
+            <CarFront size={16}/><span><b>Ride solo</b><small>One rider pays full fare</small></span>
+          </button>
+        </div>
+        {shareRide && <label className="rider-count-control">People sharing, including you
+          <select value={riderCount} onChange={(event) => setRiderCount(Number(event.target.value))}>
+            {[2, 3, 4].map((count) => <option key={count} value={count}>{count} people</option>)}
+          </select>
+        </label>}
+      </section>}
+      {matchingDriver && <div className="driver-match-card" aria-live="polite"><Sparkles size={17}/><span><b>Finding nearby demo drivers…</b><small>Ranking sample profiles by pickup distance</small></span></div>}
+      {driverSearchError && <p className="planner-error">{driverSearchError}</p>}
+      {driverMatches.length > 0 && <section className="driver-list" aria-live="polite" aria-label="Nearby demo drivers">
+        <div className="driver-list-heading"><Sparkles size={15}/><span>NEARBY DRIVER SUGGESTIONS</span><small>DEMO</small></div>
+        {driverMatches.map((driver) => <article className="driver-card" key={driver.name}>
+          <div className="driver-avatar" aria-hidden="true">{driver.name.split(" ").map((part) => part[0]).join("")}</div>
+          <div className="driver-card-main">
+            <div className="driver-card-title"><strong>{driver.name}</strong><b>${estimateFare(driver)}{shareRide && <small> / person</small>}</b></div>
+            <small className="fare-label">{shareRide ? "estimated shared price per person" : "estimated solo trip price"}</small>
+            {shareRide && <small className="fare-savings">Solo ${soloFare(driver).toFixed(2)} · save {savingsPercent}% per person</small>}
+            <span><CarFront size={13}/> {driver.color} {driver.vehicle}</span>
+            <span className="driver-rating"><Star size={13} fill="currentColor"/> {driver.rating.toFixed(1)} <small>({driver.ratingCount} sample ratings)</small></span>
+            <small>{driver.pickupDistanceMiles} mi from pickup · approx. {driver.etaMinutes} min away</small>
+          </div>
+        </article>)}
+        <p className="driver-demo-note">Estimated solo fare = $4.50 base + driver’s per-mile rate × {routes[selectedRoute]?.distanceMiles ?? 0} mi. Shared price divides that fare among {riderCount} riders. Demo estimate only: other real riders are not matched yet, and no ride is booked.</p>
+      </section>}
     </form>
     {error && <p className="planner-error">{error}</p>}
     <div className="map-panel">
-      <div ref={mapRef} className="google-map"></div>
-      {!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && <div className="map-placeholder"><MapPin size={28}/><b>Google Maps setup required</b><span>Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to .env.local</span></div>}
+      <RouteMap routes={routes} selectedRoute={selectedRoute} drivers={driverMatches} shareRide={shareRide} riderCount={riderCount}/>
       {routes.length > 0 && <div className="route-results">
         <div className="route-result-heading"><RouteIcon size={15}/> ROUTE OPTIONS ({routes.length})</div>
         {routes.map((r, i) => <button type="button" className={`route-option ${selectedRoute === i ? "active" : ""}`} key={r.id} onClick={() => setSelectedRoute(i)}>
           <span><b>{r.distanceMiles} mi</b><small><Clock3 size={12}/> {r.durationMinutes} min approx.</small></span><span>{selectedRoute === i ? "SELECTED" : "VIEW ROUTE"}</span>
         </button>)}
-        <small className="map-attribution">Map and route data © Google</small>
+        <small className="map-attribution">Routes © openrouteservice · Map © OpenStreetMap</small>
       </div>}
     </div>
   </div>;
