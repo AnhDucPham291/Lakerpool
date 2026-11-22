@@ -17,8 +17,8 @@ export async function GET(req: Request) {
   const date = searchParams.get("date");
   const rides = await db.ride.findMany({
     where: { seatsAvailable: { gt: 0 },
-      ...(origin ? { origin: { contains: origin } } : {}),
-      ...(destination ? { destination: { contains: destination } } : {}),
+      ...(origin ? { origin: { contains: origin, mode: "insensitive" as const } } : {}),
+      ...(destination ? { destination: { contains: destination, mode: "insensitive" as const } } : {}),
       ...(date ? { departureAt: { gte: new Date(date), lt: new Date(new Date(date).getTime()+86400000) } } : {})
     },
     include: { driver: { select: { id:true, name:true, studentVerified:true } }, _count: { select: { bookings:true } } },

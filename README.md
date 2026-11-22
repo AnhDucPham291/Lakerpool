@@ -5,13 +5,22 @@ A starter implementation grounded in `Prototype.docx`: search rides by origin/de
 ## Stack
 - Frontend: Next.js 15 App Router, React, TypeScript, responsive CSS.
 - Backend/API: Next.js Route Handlers with Zod validation.
-- Database: Prisma ORM + SQLite for local development.
+- Database: Prisma ORM + PostgreSQL (hosted on Neon).
+- Hosting: Vercel. The site runs online without a local server.
 - Matching: transparent rule-based matching (route, departure time, verified profile). This is not a trained AI model.
 - Route planner: shows driving miles/time and nearby demo driver profiles with sample ratings. It does not dispatch real drivers.
 
-## Run locally
+## Deploy to Vercel (no local server needed)
+1. Push this repository to GitHub.
+2. At [vercel.com](https://vercel.com), sign in with GitHub, choose **Add New → Project**, and import this repository. Keep the default settings.
+3. In the Vercel project, open **Storage → Create Database → Neon (Postgres)**, use the free plan, and connect it to the project for all environments.
+4. Under **Settings → Environment Variables**, confirm that `DATABASE_URL` and `DATABASE_URL_UNPOOLED` exist. If the Neon integration used different names, such as a custom prefix, add these two names with the pooled and direct connection strings.
+5. Under **Deployments**, choose **Redeploy** on the latest deployment. The `vercel-build` script runs `prisma db push`, which creates the tables before building.
+6. Open the `*.vercel.app` URL. Every later `git push` to `main` deploys again automatically.
+
+## Run locally (optional)
 1. Install Node.js 20.9+.
-2. Copy `.env.example` to `.env.local`. Map tiles, Photon geocoding, and OSRM routing need no API key for this prototype. The checked-in `.env` contains only the local SQLite URL for Prisma CLI.
+2. Copy `.env.example` to `.env` and paste your Postgres connection strings. You can reuse the Neon database, or create a separate Neon branch for development. Map tiles, Photon geocoding, and OSRM routing need no API key.
 3. Run `npm install`.
 4. Run `npm run db:push`.
 5. Run `npm run dev` and open `http://localhost:3000`.
@@ -61,7 +70,7 @@ Content-Type: application/json
 This is a functional MVP foundation, not a production-ready transportation or emergency-response service:
 - Replace the demo `x-user-id` header with secure authentication, sessions, CSRF protection, and authorization checks.
 - Implement actual GVSU email ownership verification (verification email/OTP); a domain check alone does not verify identity.
-- Change SQLite to PostgreSQL for deployment and add migrations/backups.
+- Replace the `prisma db push` deploy step with versioned Prisma migrations, and set up database backups.
 - The route planner uses OpenStreetMap tiles, Photon geocoding, and OSRM routing. Its nearby driver profiles/ratings are simulated and are not a trained AI model or real dispatch service.
 - Validate price calculation with your team. The current estimated price per passenger is `estimatedPrice / seatsTotal`; it is an estimate, not a payment or fare collection.
 - Add live location tracking only with explicit consent, access controls, retention limits, and secure location handling.
@@ -77,8 +86,8 @@ This is a functional MVP foundation, not a production-ready transportation or em
 - The server-side `/api/maps/route` endpoint geocodes both locations with Photon and requests driving routes from the OSRM public demo server.
 
 ### Setup
-1. Copy `.env.example` to `.env.local` to configure the local SQLite database.
-2. Run `npm run db:push`, then `npm run dev`.
+1. No map API key is needed. On Vercel, the map endpoints run as serverless functions.
+2. For local development, follow **Run locally** above.
 3. The public Photon/OSRM demo endpoints are shared community services with usage limits and no availability guarantee; use a hosted provider or self-host for production.
 
 ### Endpoints
