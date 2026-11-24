@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/prisma";
-import { badRequest, getDemoUserId } from "@/lib/http";
+import { badRequest } from "@/lib/http";
+import { getUserId } from "@/lib/auth";
 
 const createRide = z.object({
   origin: z.string().min(2), destination: z.string().min(2),
@@ -27,8 +28,8 @@ export async function GET(req: Request) {
   return NextResponse.json({ rides: rides.map(r => ({ ...r, estimatedPricePerPassenger: Number((r.estimatedPrice / Math.max(1, r.seatsTotal)).toFixed(2)) })) });
 }
 export async function POST(req: Request) {
-  const driverId = getDemoUserId(req);
-  if (!driverId) return badRequest("Missing x-user-id header. Add secure authentication before production.", 401);
+  const driverId = await getUserId(req);
+  if (!driverId) return badRequest("Sign in first.", 401);
   const parsed = createRide.safeParse(await req.json());
   if (!parsed.success) return badRequest("Ride details are incomplete or invalid.");
   const ride = await db.ride.create({ data: { ...parsed.data, departureAt: new Date(parsed.data.departureAt), driverId, seatsAvailable: parsed.data.seatsTotal } });

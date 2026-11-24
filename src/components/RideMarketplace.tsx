@@ -2,8 +2,10 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { ArrowUpRight, CarFront, Clock3, MapPin, Users, Check, X, UserRound, RefreshCw } from "lucide-react";
+import { AuthForm } from "./clients/ProfileForms";
+import { useProfile } from "./clients/shared";
+import "./clients/clients.css";
 
-type Profile = { id: string; name: string; email: string; studentVerified: boolean };
 type Ride = {
   id: string; origin: string; destination: string; departureAt: string;
   pickupDetails: string; dropoffDetails: string; vehicleType: string;
@@ -16,9 +18,7 @@ type Booking = { id: string; rideId: string; seats: number; status: string; pass
 const emptyRide = { origin: "", destination: "", departureAt: "", pickupDetails: "", dropoffDetails: "", vehicleType: "Car", vehicleName: "", vehicleColor: "", seatsTotal: "3", estimatedPrice: "30", notes: "" };
 
 export default function RideMarketplace() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const { profile, setProfile, signOut } = useProfile();
   const [tab, setTab] = useState<"find" | "post" | "manage">("find");
   const [rideForm, setRideForm] = useState(emptyRide);
   const [rides, setRides] = useState<Ride[]>([]);
@@ -30,15 +30,12 @@ export default function RideMarketplace() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("lakerpool-profile");
-      if (stored) setProfile(JSON.parse(stored) as Profile);
-    } catch { localStorage.removeItem("lakerpool-profile"); }
     void loadRides();
   }, []);
 
   function headers(json = false): HeadersInit {
-    return { ...(json ? { "Content-Type": "application/json" } : {}), ...(profile ? { "x-user-id": profile.id } : {}) };
+    // The session cookie identifies the user; it is sent automatically.
+    return json ? { "Content-Type": "application/json" } : {};
   }
 
   async function loadRides(origin = filterOrigin, destination = filterDestination) {
@@ -60,19 +57,6 @@ export default function RideMarketplace() {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error ?? "Could not load booking requests.");
     setRequests(data.bookings ?? []);
-  }
-
-  async function createProfile(event: FormEvent) {
-    event.preventDefault(); setBusy(true); setError(""); setNotice("");
-    try {
-      const response = await fetch("/api/users", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Could not create profile.");
-      const nextProfile = data.user as Profile;
-      localStorage.setItem("lakerpool-profile", JSON.stringify(nextProfile)); setProfile(nextProfile);
-      setNotice(`Welcome, ${nextProfile.name}. Your profile is ready for this browser.`);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not create profile."); }
-    finally { setBusy(false); }
   }
 
   async function postRide(event: FormEvent) {
@@ -123,14 +107,8 @@ export default function RideMarketplace() {
 
   return <section className="market-section" id="community-rides">
     <div className="market-heading"><div><div className="eyebrow dark">REAL RIDES · DATABASE POSTED</div><h2>Drive together.<br/><em>Get there for less.</em></h2></div><p>Drivers can publish a trip, and riders can request an open seat. Drivers confirm requests before a seat is reserved.</p></div>
-    {!profile ? <form className="profile-form" onSubmit={createProfile}>
-      <div className="market-form-title"><UserRound size={18}/><div><b>Create your rider/driver profile</b><small>Use a GVSU email to continue.</small></div></div>
-      <label>Your name<input required minLength={2} value={name} onChange={e => setName(e.target.value)} placeholder="Full name" /></label>
-      <label>GVSU email<input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@mail.gvsu.edu" /></label>
-      <button className="button button-primary" disabled={busy}>{busy ? "Creating…" : "Create profile"}<ArrowUpRight size={16}/></button>
-      <small className="market-disclaimer">MVP only: this profile form does not verify email ownership or provide secure sign-in.</small>
-    </form> : <>
-      <div className="market-user"><span><UserRound size={15}/>{profile.name} · {profile.email}</span><button type="button" onClick={() => { localStorage.removeItem("lakerpool-profile"); setProfile(null); setRequests([]); }}>Sign out</button></div>
+    {!profile ? <AuthForm variant="account" onDone={(user) => { setProfile(user); setNotice(`Welcome, ${user.name}. You are signed in.`); }} /> : <>
+      <div className="market-user"><span><UserRound size={15}/>{profile.name} · {profile.email}</span><button type="button" onClick={() => { void signOut(); setRequests([]); }}>Sign out</button></div>
       <div className="market-tabs" role="tablist" aria-label="Ride actions">
         <button type="button" className={tab === "find" ? "active" : ""} onClick={() => void changeTab("find")}>Find a ride</button>
         <button type="button" className={tab === "post" ? "active" : ""} onClick={() => void changeTab("post")}>Post a ride</button>

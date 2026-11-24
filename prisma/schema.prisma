@@ -24,11 +24,29 @@ enum ReportSeverity {
   EMERGENCY
 }
 
+// Lifecycle of a rider's trip request in the rider/driver apps.
+enum TripStatus {
+  OPEN
+  ACCEPTED
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id            String   @id @default(cuid())
   name          String
   email         String   @unique
   studentVerified Boolean @default(false)
+  // scrypt hash (see src/lib/auth.ts). Null for profiles created before passwords existed.
+  passwordHash  String?
+  sessions      Session[]
+  // Shared with the other party only after a driver accepts a trip.
+  phone         String?
+  // Driver app: a user becomes a driver by adding vehicle details.
+  isDriver      Boolean  @default(false)
+  vehicleName   String?
+  vehicleColor  String?
+  licensePlate  String?
   createdAt     DateTime @default(now())
   driverRides   Ride[]   @relation("DriverRides")
   bookings      Booking[]
@@ -36,6 +54,58 @@ model User {
   reviewsReceived Review[] @relation("ReviewsReceived")
   reports       SafetyReport[]
   messages      Message[]
+  tripRequests  TripRequest[] @relation("RiderTrips")
+  tripsDriven   TripRequest[] @relation("DriverTrips")
+  tripMessages  TripMessage[]
+}
+
+// A signed-in browser. The cookie holds a random token; only its SHA-256 hash is stored here.
+model Session {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  @@index([userId])
+}
+
+// A rider asks for a ride; one driver can accept it.
+model TripRequest {
+  id              String     @id @default(cuid())
+  riderId         String
+  rider           User       @relation("RiderTrips", fields: [riderId], references: [id])
+  driverId        String?
+  driver          User?      @relation("DriverTrips", fields: [driverId], references: [id])
+  origin          String
+  destination     String
+  // Simplified route as [[latitude, longitude], ...] for the map preview.
+  routePath       Json
+  distanceMiles   Float
+  durationMinutes Int
+  departureAt     DateTime
+  // People in the rider's group who split the fare.
+  riders          Int        @default(1)
+  totalFare       Float
+  farePerRider    Float
+  notes           String?
+  status          TripStatus @default(OPEN)
+  acceptedAt      DateTime?
+  createdAt       DateTime   @default(now())
+  messages        TripMessage[]
+  @@index([status, departureAt])
+  @@index([riderId])
+  @@index([driverId])
+}
+
+model TripMessage {
+  id        String      @id @default(cuid())
+  tripId    String
+  trip      TripRequest @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User        @relation(fields: [senderId], references: [id])
+  body      String
+  createdAt DateTime    @default(now())
+  @@index([tripId, createdAt])
 }
 
 model Ride {

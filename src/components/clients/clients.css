@@ -1,0 +1,143 @@
+/* Rider and driver apps (/rider, /driver). Shares colors and type with globals.css. */
+.app-shell{min-height:100vh;background:var(--paper)}
+.app-header{display:flex;align-items:center;flex-wrap:wrap;gap:12px 16px;padding:16px 7.2%;background:#10151d;color:white}
+.app-badge{padding:5px 8px;border-radius:3px;background:var(--lime);color:#10151d;font-size:9px;font-weight:800;letter-spacing:.16em}
+.app-switch{display:flex;gap:4px;margin-left:auto}
+.app-switch a{padding:8px 11px;border:1px solid transparent;border-radius:3px;color:#c2cad2;font-size:11px;text-decoration:none}
+.app-switch a:hover{color:white}
+.app-switch a.active{border-color:#56606b;color:white}
+.app-user{display:flex;align-items:center;gap:7px;color:#c2cad2;font-size:11px}
+.app-user button{padding:0;border:0;background:none;color:var(--lime);font:inherit;text-decoration:underline;cursor:pointer}
+
+.app-main{max-width:1180px;margin:0 auto;padding:44px 7.2% 80px}
+.app-intro{margin-bottom:28px}
+.app-title{margin:14px 0 12px;font-size:clamp(36px,5vw,58px);line-height:1.02}
+.app-title em{color:#8cae36}
+.app-intro p{max-width:600px;margin:0;color:#5f6a73;font-size:14px;line-height:1.7}
+.app-loading,.app-empty{padding:22px;background:white;border:1px dashed #d4dcc9;color:#6d7780;font-size:12px;text-align:center}
+
+.app-card{padding:22px;background:white;border:1px solid #dce2d4}
+.app-form{display:grid;gap:14px;align-content:start}
+.app-form-title{display:flex;align-items:center;gap:10px;color:#718a37}
+.app-form-title>div{display:flex;flex-direction:column;gap:3px}
+.app-form-title b{color:#202a32;font:700 15px Manrope}
+.app-form-title small{color:#737c85;font-size:11px;line-height:1.5}
+.app-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.app-field{display:flex;flex-direction:column;gap:7px;color:#59646c;font-size:11px;font-weight:600}
+.app-field>span{display:flex;align-items:center;gap:6px}
+.app-field input,.app-field select,.app-field textarea{width:100%;padding:12px;border:1px solid #e0e5dc;border-radius:0;background:#fbfcf9;color:#202a32;font:13px 'DM Sans',sans-serif}
+.app-field textarea{resize:vertical}
+.app-field input:focus,.app-field select:focus,.app-field textarea:focus,.trip-chat-form input:focus{outline:2px solid #c9f36a;outline-offset:0;border-color:#9ab94c}
+.app-hint{color:#818a90;font-size:10px;font-weight:400;line-height:1.5}
+
+.app-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 15px;border:1px solid #dce3d3;background:white;color:#3f5715;font:700 12px 'DM Sans',sans-serif;cursor:pointer;transition:.15s}
+.app-button:hover:not(:disabled){border-color:#9ab94c}
+.app-button:focus-visible,.app-tabs button:focus-visible,.app-switch a:focus-visible{outline:2px solid #8cae36;outline-offset:2px}
+.app-button.primary{background:var(--lime);border-color:var(--lime);color:#151b20}
+.app-button.primary:hover:not(:disabled){box-shadow:0 8px 22px #c9f36a55}
+.app-button.danger{color:#9a3c2a}
+.app-button:disabled{opacity:.55;cursor:not-allowed}
+.app-notice,.app-error{margin:12px 0 0;padding:11px 13px;font-size:12px;line-height:1.5}
+.app-notice{background:#eff6e4;color:#4a6419}
+.app-error{background:#fff0eb;color:#9a3c2a}
+
+.place-field{position:relative}
+.place-suggestions{position:absolute;z-index:30;top:calc(100% + 2px);left:0;right:0;background:white;border:1px solid #e1e6dc;box-shadow:0 12px 30px #15202a24}
+.place-suggestions button{display:flex;align-items:center;gap:8px;width:100%;padding:11px;border:0;background:white;color:#303a43;font:12px 'DM Sans',sans-serif;text-align:left;cursor:pointer}
+.place-suggestions button:hover{background:#f1f5e9}
+.place-suggestions svg{flex:none;color:#84994f}
+
+.request-layout{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.25fr);gap:18px;align-items:stretch}
+.quote{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px;background:#f3f7ea;border:1px solid #dfe8cc}
+.quote>div{display:flex;flex-direction:column;gap:2px}
+.quote small{color:#77834d;font-size:9px;font-weight:700;letter-spacing:.14em}
+.quote b{color:#2f4410;font:800 22px Manrope}
+.quote span{color:#5f6a73;font-size:11px}
+.trip-map,.trip-route-map{position:relative;overflow:hidden;background:#17212c}
+.trip-map{min-height:420px}
+.trip-route-map{height:280px}
+.trip-map-canvas{position:absolute;inset:0;width:100%;height:100%}
+.trip-map-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;background:linear-gradient(145deg,#17212c,#253342);color:#aeb9c7;font-size:12px;text-align:center}
+.trip-map-empty svg{color:var(--lime)}
+.trip-map-empty b{color:white;font:600 15px Manrope}
+
+.app-section{margin-top:44px}
+.app-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.app-section-head h2{margin:0;font-size:30px}
+.app-tabs{display:flex;gap:4px;border-bottom:1px solid #dfe5d8}
+.app-tabs button{display:flex;align-items:center;gap:7px;padding:11px 14px;border:0;border-bottom:2px solid transparent;background:transparent;color:#69727c;font:700 12px 'DM Sans',sans-serif;cursor:pointer}
+.app-tabs button.active{border-color:#95b746;color:#4a6419}
+.tab-count{min-width:20px;padding:2px 6px;border-radius:999px;background:#e8eddf;color:#4a6419;font-size:10px}
+
+.trip-list{display:grid;gap:14px}
+.trip-card{display:grid;gap:14px;padding:18px;background:white;border:1px solid #dce2d4}
+.trip-card.muted{background:#fbfcf9}
+.trip-card.muted .trip-route b,.trip-card.muted .trip-fare b{color:#6d7780}
+.trip-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.trip-card-status{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.trip-card-status small{color:#6d7780;font-size:11px}
+.trip-card-label{color:#77834d;font-size:10px;font-weight:800;letter-spacing:.16em}
+.status-pill{padding:5px 9px;border-radius:999px;background:#eef1ea;color:#59646c;font-size:10px;font-weight:700;letter-spacing:.04em}
+.status-pill.open{background:#fff3d6;color:#7a5708}
+.status-pill.accepted{background:#e3f2c9;color:#3a580c}
+.status-pill.completed{background:#e5edf7;color:#2f4f75}
+.status-pill.cancelled{background:#f6e5e0;color:#9a3c2a}
+.trip-fare{text-align:right}
+.trip-fare b{display:block;color:#3f5715;font:800 26px Manrope;letter-spacing:-.03em}
+.trip-fare small{color:#737c85;font-size:11px}
+.trip-route{display:grid;grid-template-columns:12px 1fr;gap:10px 12px;align-items:center}
+.trip-route>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.trip-route small{color:#8a939b;font-size:9px;font-weight:700;letter-spacing:.14em}
+.trip-route b{color:#18202a;font:700 14px Manrope;overflow-wrap:anywhere}
+.dot{width:12px;height:12px;border:3px solid #10151d;border-radius:50%}
+.dot.start{background:var(--lime)}
+.dot.end{background:var(--orange)}
+.trip-facts{display:flex;flex-wrap:wrap;gap:8px 16px;color:#5f6a73;font-size:12px}
+.trip-facts span{display:flex;align-items:center;gap:5px}
+.trip-facts svg{color:#84994f}
+.trip-notes{margin:0;padding:10px 12px;border-left:3px solid var(--lime);background:#f8f9f6;color:#4b555e;font-size:12px;line-height:1.5}
+
+.person-card{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:13px;background:#f8faf4;border:1px solid #e1e9d3}
+.person-avatar{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#10151d;color:var(--lime);font:800 13px Manrope}
+.person-label{color:#77834d;font-size:9px;font-weight:800;letter-spacing:.16em}
+.person-card b{color:#18202a;font:700 15px Manrope}
+.person-meta{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:5px;color:#5f6a73;font-size:11px}
+.person-meta span{display:flex;align-items:center;gap:5px;overflow-wrap:anywhere}
+.person-meta a{color:#3f5715}
+.person-meta .verified{color:#3a660b;font-weight:700}
+.person-meta .unverified{color:#8a5f08;font-weight:700}
+.trip-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+
+.trip-chat{background:#fbfcf9;border:1px solid #e1e6dc}
+.trip-chat-head{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid #e6eae2;color:#4b555e;font-size:12px;font-weight:700}
+.trip-chat-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;padding:12px}
+.trip-chat-empty{margin:0;color:#7a838b;font-size:12px;text-align:center}
+.chat-bubble{align-self:flex-start;max-width:78%;padding:8px 11px;border:1px solid #e3e7df;border-radius:12px 12px 12px 3px;background:white;color:#202a32;font-size:13px;line-height:1.45;overflow-wrap:anywhere}
+.chat-bubble.mine{align-self:flex-end;border-color:#d5e8b0;border-radius:12px 12px 3px 12px;background:#e9f5d3}
+.chat-bubble small{display:block;margin-top:3px;color:#7a838b;font-size:10px}
+.trip-chat-form{display:flex;gap:6px;padding:10px;border-top:1px solid #e6eae2}
+.trip-chat-form input{flex:1;min-width:0;padding:10px;border:1px solid #e0e5dc;background:white;font:13px 'DM Sans',sans-serif}
+.trip-chat .app-error{margin:0 10px 10px}
+
+@media(max-width:800px){
+  .app-header{padding:14px 16px}
+  .app-switch{order:3;width:100%;margin-left:0}
+  .app-user{margin-left:auto}
+  .app-main{padding:30px 16px 60px}
+  .request-layout,.app-form-grid{grid-template-columns:1fr}
+  .trip-map{min-height:300px}
+  .trip-card-top{flex-direction:column}
+  .trip-fare{text-align:left}
+  .app-section-head{flex-wrap:wrap}
+  .trip-actions .app-button{flex:1 1 auto}
+}
+
+/* Sign-up / sign-in form */
+.password-input{position:relative;display:block}
+.password-input input{padding-right:44px}
+.password-input button{position:absolute;top:0;right:0;bottom:0;width:42px;display:grid;place-items:center;padding:0;border:0;background:transparent;color:#69727c;cursor:pointer}
+.password-input button:hover{color:#3f5715}
+.password-input button:focus-visible{outline:2px solid #8cae36;outline-offset:-2px}
+.auth-switch{margin:0;color:#5f6a73;font-size:12px}
+.auth-switch button{padding:0;border:0;background:none;color:#4a6419;font:700 12px 'DM Sans',sans-serif;text-decoration:underline;cursor:pointer}
+.app-form>.app-notice{margin:0}

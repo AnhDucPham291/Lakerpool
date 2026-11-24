@@ -1,3 +1,4 @@
+import Link from "next/link";
 import TripPlanner from "@/components/TripPlanner";
 import SiteQrCode from "@/components/SiteQrCode";
 import RideMarketplace from "@/components/RideMarketplace";
@@ -13,7 +14,7 @@ export default function Home() {
   return <main className="site-shell">
     <nav className="nav">
       <a className="brand" href="#"><span className="brand-mark">LP</span><span>LAKER<span className="brand-light">POOL</span></span></a>
-      <div className="nav-links"><a href="#how">HOW IT WORKS</a><a href="#features">WHY LAKERPOOL</a><a href="#rides">FIND A RIDE</a></div>
+      <div className="nav-links"><a href="#how">HOW IT WORKS</a><a href="#rides">PLAN A ROUTE</a><Link href="/rider">RIDER APP</Link><Link href="/driver">DRIVER APP</Link></div>
       <div className="nav-actions"><SiteQrCode /><a className="nav-cta" href="#rides">Explore rides <ArrowUpRight size={16}/></a></div>
     </nav>
 
@@ -24,7 +25,7 @@ export default function Home() {
         <div className="eyebrow"><span className="pulse"></span> GVSU STUDENT RIDE SHARING</div>
         <h1>Go further.<br/><em>Share the ride.</em></h1>
         <p className="hero-text">A simpler way for students to find affordable rides, meet trusted travel companions, and get where they need to go.</p>
-        <div className="hero-actions"><a className="button button-primary" href="#rides">Find your ride <ArrowUpRight size={17}/></a><a className="text-link" href="#how">See how it works <span>↗</span></a></div>
+        <div className="hero-actions"><Link className="button button-primary" href="/rider">I need a ride <ArrowUpRight size={17}/></Link><Link className="text-link" href="/driver">I&apos;m a driver <span>↗</span></Link></div>
         <div className="hero-stats"><div><strong>01</strong><span>Search a route</span></div><div><strong>02</strong><span>Compare your options</span></div><div><strong>03</strong><span>Share the journey</span></div></div>
       </div>
       <div className="hero-art" aria-label="Abstract route visualization">

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/prisma";
-import { badRequest, getDemoUserId } from "@/lib/http";
+import { badRequest } from "@/lib/http";
+import { getUserId } from "@/lib/auth";
 export async function PATCH(req:Request,{params}:{params:Promise<{id:string}>}) {
-  const driverId=getDemoUserId(req); if(!driverId) return badRequest("Sign in first.",401);
+  const driverId=await getUserId(req); if(!driverId) return badRequest("Sign in first.",401);
   const {id}=await params; const body=z.object({accept:z.boolean()}).safeParse(await req.json());
   if(!body.success) return badRequest("Decision must be true or false.");
   const booking=await db.booking.findUnique({where:{id},include:{ride:true}});
